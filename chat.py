@@ -4,7 +4,7 @@ from openai import OpenAI
 app = Flask(__name__)
 
 client = OpenAI(
-    api_key = "sk-4vTwJRJOEQsuA0AHUQB7ICHuC6XMNvwNt06Db4vpdUPG3KgW",
+    api_key = "$MOONSHOT_API_KEY",
     base_url = "https://api.moonshot.cn/v1",
 )
 
