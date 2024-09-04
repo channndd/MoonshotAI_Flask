@@ -1,10 +1,20 @@
 from flask import Flask, request, jsonify, render_template
 from openai import OpenAI
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
+# 加载 .env 文件
+load_dotenv()
+
 client = OpenAI(
-    api_key = "$MOONSHOT_API_KEY",
+    # 你可以直接设置api_key
+    # api_key = "$MOONSHOT_API_KEY",
+    # or
+    # 我们会从环境变量中获取 MOONSHOT_DEMO_API_KEY 的值作为 API Key，
+    # 请确保你已经在环境变量中正确设置了 MOONSHOT_DEMO_API_KEY 的值
+    api_key=os.environ["MOONSHOT_API_KEY"],
     base_url = "https://api.moonshot.cn/v1",
 )
 

@@ -21,6 +21,40 @@ python -c 'import openai; print("version =",openai.__version__)'
 # 输出可能是 version = 1.10.0，表示当前 python 实际使用了 openai 的 v1.10.0 的库
 ```
 
+### 1. 克隆项目：
+   首先，克隆项目到本地。
+
+### 2. 设置环境变量：
+
+1.在操作系统中设置环境变量。
+- **Windows**：
+    在命令行中，可以使用以下命令：
+    ```cmd
+    setx MOONSHOT_API_KEY "your_actual_api_key"
+    ```
+    或者在系统的环境变量设置中添加。
+
+- **macOS/Linux**：
+    在终端中，可以将以下命令添加到 `.bashrc`、`.bash_profile` 或 `.profile` 文件中：
+    ```bash
+    export MOONSHOT_API_KEY = "your_actual_api_key"
+    ```
+    然后，运行 `source ~/.bashrc`（或对应的文件名）来应用更改。
+
+2.使用 `.env` 文件
+- **使用 `.env` 文件**：
+    另一种常见的做法是使用 `.env` 文件来存储环境变量。其中包含所有需要的环境变量及其注释说明，但不包含实际的值。例如：
+    ```
+    MOONSHOT_API_KEY = 'your_actual_api_key'
+    ```
+    填入自己的API密钥。
+
+### 3. 开始对话：
+
+开始对话起来吧
+
+
+
 ---
 
 
