@@ -8,7 +8,7 @@
 - 基于Flask框架构建，使用MoonshotAI API实现对话功能。
 - 界面支持Markdown语法解析和代码高亮显示。
 
----
+
 其中 $MOONSHOT_API_KEY 需要替换为您在平台上创建的 API Key。
 
 *需要保证 Python 版本至少为 3.7.1，OpenAI SDK 版本不低于 1.0.0*
