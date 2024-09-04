@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chat Interface</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+<style>
+  :root {
+    --primary-color: #007BFF; /* 更深的蓝色 */
+    --secondary-color: #f1f3f5;
+    --text-color: #2c3e50;
+    --background-color: #ecf0f1;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .chat-container {
+    width: 95%; /* 增加聊天窗口的宽度 */
+    max-width: 1000px; /* 增加最大宽度 */
+    margin: auto;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 20px;
+    text-align: center;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: bold;
+    border-radius: 20px 20px 0 0;
+  }
+  .chat-box {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+  }
+  .chat-input-container {
+    padding: 20px;
+    background-color: #fff;
+    border-top: 1px solid var(--secondary-color);
+    display: flex;
+    align-items: center;
+  }
+  .chat-input {
+    flex-grow: 1;
+    padding: 12px 20px;
+    border: 2px solid var(--secondary-color);
+    border-radius: 25px;
+    resize: none;
+    font-size: 14px;
+    line-height: 1.5;
+    max-height: 150px;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+  }
+  .chat-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  }
+  .send-button {
+    padding: 12px 20px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 25px;
+    background-color: var(--primary-color);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .send-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px var(--shadow-color);
+  }
+  .send-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+  .send-button.loading {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+  .send-button.loading::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .message {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+    box-shadow: 0 3px 10px var(--shadow-color);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .user-message {
+    align-self: flex-end;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .ai-message {
+    align-self: flex-start;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border-bottom-left-radius: 4px;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: none;
+    border-radius: 12px;
+    color: var(--text-color);
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+  .message:hover .copy-btn {
+    opacity: 1;
+  }
+  .copy-btn:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+  }
+  .markdown-body {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .markdown-body > *:first-child {
+    margin-top: 0;
+  }
+  .markdown-body > *:last-child {
+    margin-bottom: 0;
+  }
+  .markdown-body pre {
+    background-color: #282c34;
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    box-shadow: inset 0 0 5px var(--shadow-color);
+    position: relative;
+  }
+  .markdown-body pre code {
+    font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 14px;
+    color: #abb2bf;
+  }
+  .code-copy-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 4px;
+    color: #abb2bf;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .code-copy-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  .scroll-btn {
+    position: absolute;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 2px 5px var(--shadow-color);
+  }
+  .scroll-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+  }
+  .scroll-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #scrollUpBtn {
+    bottom: 140px;
+  }
+  #scrollDownBtn {
+    bottom: 90px;
+  }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--secondary-color);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+  }
+</style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">Elegant AI Chat Assistant</div>
+    <div class="chat-box" id="chatBox"></div>
+    <button id="scrollUpBtn" class="scroll-btn" onclick="scrollChat('up')">↑</button>
+    <button id="scrollDownBtn" class="scroll-btn" onclick="scrollChat('down')">↓</button>
+    <div class="chat-input-container">
+      <textarea id="userInput" placeholder="Type your message here..." class="chat-input" rows="1" oninput="autoResize()"></textarea>
+      <button id="sendButton" onclick="sendMessage()" class="send-button">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chatBox');
+    const scrollUpBtn = document.getElementById('scrollUpBtn');
+    const scrollDownBtn = document.getElementById('scrollDownBtn');
+    const sendButton = document.getElementById('sendButton');
+
+    function sendMessage() {
+      const userInput = document.getElementById('userInput').value.trim();
+      if (userInput) {
+        appendMessage('user-message', userInput);
+
+        // 添加发送按钮的加载状态
+        sendButton.classList.add('loading');
+        sendButton.disabled = true;
+
+        fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: userInput })
+        })
+        .then(response => response.json())
+        .then(data => {
+          appendMessage('ai-message', data.response);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        })
+        .finally(() => {
+          // 移除发送按钮的加载状态
+          sendButton.classList.remove('loading');
+          sendButton.disabled = false;
+        });
+
+        document.getElementById('userInput').value = '';
+        autoResize();
+      }
+    }
+
+    // 添加消息到聊天框
+function appendMessage(className, message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${className}`;
+
+      const parsedMessage = marked.parse(message);
+
+      messageDiv.innerHTML = `
+        <div class="markdown-body">${parsedMessage}</div>
+        <button class="copy-btn" onclick="copyMessage(this)">Copy</button>
+      `;
+
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // 应用语法高亮
+      messageDiv.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+        addCodeCopyButton(block.parentElement);
+      });
+
+      updateScrollButtons();
+    }
+
+    // 自动调整文本区域的高度
+    function autoResize() {
+      const textarea = document.getElementById('userInput');
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+    }
+
+    // 复制消息内容
+    function copyMessage(button) {
+      const messageContent = button.parentElement.querySelector('.markdown-body').innerText;
+      navigator.clipboard.writeText(messageContent);
+      button.textContent = 'Copied!';
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 2000);
+    }
+
+    // 为代码块添加复制按钮
+    function addCodeCopyButton(pre) {
+      const button = document.createElement('button');
+      button.textContent = 'Copy';
+      button.className = 'code-copy-btn';
+      button.onclick = function() {
+        const code = pre.querySelector('code').innerText;
+        navigator.clipboard.writeText(code);
+        this.textContent = 'Copied!';
+        setTimeout(() => {
+          this.textContent = 'Copy';
+        }, 2000);
+      };
+      pre.appendChild(button);
+    }
+
+    // 更新滚动按钮的可见性
+    function updateScrollButtons() {
+      const isScrollable = chatBox.scrollHeight > chatBox.clientHeight;
+      const isScrolledToTop = chatBox.scrollTop === 0;
+      const isScrolledToBottom = chatBox.scrollHeight - chatBox.scrollTop === chatBox.clientHeight;
+
+      scrollUpBtn.classList.toggle('visible', isScrollable && !isScrolledToTop);
+      scrollDownBtn.classList.toggle('visible', isScrollable && !isScrolledToBottom);
+    }
+
+    // 滚动聊天框
+    function scrollChat(direction) {
+      const scrollAmount = chatBox.clientHeight * 0.8;
+      if (direction === 'up') {
+        chatBox.scrollBy(0, -scrollAmount);
+      } else {
+        chatBox.scrollBy(0, scrollAmount);
+      }
+    }
+
+    chatBox.addEventListener('scroll', updateScrollButtons);
+
+    // 添加回车键发送消息的功能
+    document.getElementById('userInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // 初始化滚动按钮状态
+    updateScrollButtons();
+  </script>
+</body>
+</html>
