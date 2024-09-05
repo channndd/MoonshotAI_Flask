@@ -5,18 +5,40 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-# 加载 .env 文件
-load_dotenv()
+def get_api_key():
+    # 1. 检查环境变量是否已设置
+    api_key = os.getenv("MOONSHOT_API_KEY")
+    if api_key:
+        return api_key
+    
+    # 2. 如果环境变量未设置，尝试从.env文件加载
+    load_dotenv()
+    api_key = os.getenv("MOONSHOT_API_KEY")
+    if api_key:
+        return api_key
+    
+    # 3. 如果仍然没有找到API密钥，抛出异常
+    raise ValueError("MOONSHOT_API_KEY not found in environment variables or .env file")
 
-client = OpenAI(
-    # 你可以直接设置api_key
-    # api_key = "$MOONSHOT_API_KEY",
-    # or
-    # 我们会从环境变量中获取 MOONSHOT_DEMO_API_KEY 的值作为 API Key，
-    # 请确保你已经在环境变量中正确设置了 MOONSHOT_DEMO_API_KEY 的值
-    api_key=os.environ["MOONSHOT_API_KEY"],
-    base_url = "https://api.moonshot.cn/v1",
-)
+try:
+    client = OpenAI(
+        api_key=get_api_key(),
+        base_url="https://api.moonshot.cn/v1"
+    )
+except ValueError as e:
+    print(f"Error: {e}")
+    
+    exit(1)
+
+# client = OpenAI(
+#     # 你可以直接设置api_key
+#     # api_key = "$MOONSHOT_API_KEY",
+#     # or
+#     # 我们会从环境变量中获取 MOONSHOT_DEMO_API_KEY 的值作为 API Key，
+#     # 请确保你已经在环境变量中正确设置了 MOONSHOT_DEMO_API_KEY 的值
+#     api_key=os.environ["MOONSHOT_API_KEY"],
+#     base_url = "https://api.moonshot.cn/v1",
+# )
 
 first_prompt = """
 ▎角色扮演
