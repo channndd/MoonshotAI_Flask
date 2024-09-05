@@ -27,7 +27,6 @@ try:
     )
 except ValueError as e:
     print(f"Error: {e}")
-    
     exit(1)
 
 # client = OpenAI(
@@ -87,24 +86,26 @@ first_prompt = """
 
 history = [{"role": "system", "content": f"{first_prompt}"}]
 
-# 只保留最近几轮对话
 def manage_history(history):
-    if len(history) > 25:
-        history = history[:1] + history[-20:]  # 保留最近的20轮对话
-    return history
-
-# 确保总输入内容不超过20万字
-def check_content_length(history):
-    max_length = 200000  # 20万字
-    total_length = sum(len(entry["content"]) for entry in history)
-    if total_length > max_length:
-        # 从最早的对话开始删除，直到总长度小于等于20万字
-        for entry in history[:-1]:  # 保留最近的一轮对话
-            total_length -= len(entry["content"])
-            history.remove(entry)
-            if total_length <= max_length:
-                break
-    return history
+    """
+    仅保留最近几轮对话。
+    
+    :param history: 对话历史记录列表
+    :return: 处理后的对话历史记录列表
+    """
+    try:
+        if not isinstance(history, list):
+            raise ValueError("history must be a list")
+        
+        if len(history) > 25:
+            history = history[-21:]  # 保留最近的20轮对话
+        elif len(history) == 0:
+            history = []  # 显式处理空列表的情况
+        
+        return history
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
 
 def chat(query, history):
     history.append({
@@ -138,7 +139,6 @@ def chat_with_ai():
 
     global history
     history = manage_history(history)
-    history = check_content_length(history)
     response, history = chat(user_message, history)
 
     return jsonify({"response": response})
