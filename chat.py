@@ -5,20 +5,23 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
+
+
+
 def get_api_key():
-    # 1. 检查环境变量是否已设置
+    # 1. 首先尝试从环境变量获取API密钥
     api_key = os.getenv("MOONSHOT_API_KEY")
-    if api_key:
-        return api_key
     
-    # 2. 如果环境变量未设置，尝试从.env文件加载
-    load_dotenv()
-    api_key = os.getenv("MOONSHOT_API_KEY")
-    if api_key:
-        return api_key
+    # 2. 如果环境变量中没有找到，则尝试加载.env文件并再次获取
+    if api_key is None:
+        load_dotenv()
+        api_key = os.getenv("MOONSHOT_API_KEY")
     
     # 3. 如果仍然没有找到API密钥，抛出异常
-    raise ValueError("MOONSHOT_API_KEY not found in environment variables or .env file")
+    if api_key is None:
+        raise ValueError("MOONSHOT_API_KEY not found in environment variables or .env file")
+    
+    return api_key
 
 try:
     client = OpenAI(
